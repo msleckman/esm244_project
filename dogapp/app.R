@@ -33,11 +33,11 @@ ui <- dashboardPage(
                 DTOutput('table1'),
                 
                 box(sliderInput("park_size", "Park Size (Acres):", 0,135, 15)),
-                box(selectInput("Accessibility", "Accessibility:", choices = unique(dog_parks$Accessibility))),
+                box(selectInput("Accessibility", "Accessibility:", choices = unique(dog_parks_updated$Accessibility))),
                 
                 box(title = "On Leash",
-                    radioButtons("on_leash", "Leash Options", choices = unique(dog_parks$onleash)),
-                    radioButtons("run", "Dog Run", choices = unique(dog_parks$run))),#radiobuttons is for radiobuttons
+                    radioButtons("on_leash", "Leash Options", choices = unique(dog_parks_updated$onleash)),
+                    radioButtons("run", "Dog Run", choices = unique(dog_parks_updated$run))),#radiobuttons is for radiobuttons
                 
       DT::renderDT({
         datatable(table1) %>% 
