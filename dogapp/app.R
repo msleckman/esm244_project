@@ -61,15 +61,15 @@ ui <- dashboardPage(
 server <- function(input, output) {
   
   output$mymap <- renderLeaflet({
-    #dog_onleash<-dog_parks_updated$onleash %>% 
-    # filter(onleash == "y")
-    leaflet() %>%  
+    sub_map<-dog_parks_updated %>% 
+    filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility)
+    leaflet(sub_map) %>%  
       addProviderTiles("OpenStreetMap")%>% 
       #addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
       #         attribution = 'Google') %>% 
       setView(lng = -119.8, lat = 34.4, zoom = 11) %>% 
-      addMarkers(lat = dog_parks_updated$`latitude-decimal`, 
-                 lng = dog_parks_updated$`longitude-decimal`,
+      addMarkers(lat = sub_map$`latitude-decimal`, 
+                 lng = sub_map$`longitude-decimal`,
                  #clusterOptions = markerClusterOptions(),
                  popup = as.character(dog_parks_updated$park_name))
   })
@@ -82,7 +82,8 @@ server <- function(input, output) {
   })
   
   output$table1 = renderDT(
-    dog_parks_updated
+    sub_table<-dog_parks_updated %>% 
+      filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility)
   )
 }
 
