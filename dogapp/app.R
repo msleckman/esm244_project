@@ -33,11 +33,12 @@ ui <- dashboardPage(
                 DTOutput('table1'),
                 
                 box(sliderInput("park_size", "Park Size (Acres):", 0,135, 15)),
-                box(selectInput("Accessibility", "Accessibility:", choices = unique(dog_parks$Accessibility))),
+                box(selectInput("Accessibility", "Accessibility:", choices = c("Paved", "Unpaved", "Not Accessible")))),
                 
                 box(title = "On Leash",
-                    radioButtons("on_leash", "Leash Options", choices = unique(dog_parks$onleash)),
-                    radioButtons("run", "Dog Run", choices = unique(dog_parks$run))),#radiobuttons is for radiobuttons
+                    radioButtons("on_leash", "Leash Options", choices = c("On Leash Only", "Off Leash"))),
+                    box(title = "Dog Run",
+                        radioButtons("run", "Dog Run", choices = "Dog Run"))),#radiobuttons is for radiobuttons
                 
       DT::renderDT({
         datatable(table1) %>% 
@@ -54,28 +55,19 @@ ui <- dashboardPage(
     )
     ))
     
-  )
   
-)
+  
+
 
 
 # Define server logic required to draw a histogram
-server <- function(input, output,session) {
+server <- function(input, output, session) {
   
-datasetInput<- reactive({
-  switch(input$dataset,
-          "OnLeash" = on_leash,
-         "Accessible" = Accessibility,
-         "Dog Run" = run,
-         "Acres" = park_size
+  output$table1 = renderDT(
+    dog_parks
   )
-})
- 
-output$nrows <- reactive({
-  nrow(datasetInput())
-})        
+  
     
-outputOptions(output, "nrows", suspendWhenHidden = FALSE)
 
 }
 
