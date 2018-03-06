@@ -3,6 +3,8 @@ library(shiny)
 library(tidyverse)
 library(DT)
 library(leaflet)
+library(dplyr)
+
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(
@@ -22,39 +24,46 @@ ui <- dashboardPage(
       tabItem(tabName = "tab_1",
               fluidPage(
                 fluidRow(
+                  
+##Map input at top of page
                   leafletOutput("mymap"),
                   #actionButton("park"),
                   #verbatimTextOutput('summary')),
+
+##Table input below map                  
                   DTOutput('table1'),
+                  
+##Widgets
                   box(sliderInput("park_size", "Park Size (Acres):", 0,135, 15)),
-                  box(selectInput("Accessibility", "Accessibility:", choices = c("Paved", "Unpaved", "Not Accessible")))),
-                
-                box(title = "On Leash",
-                    radioButtons("on_leash", "Leash Options", choices = c("On Leash Only", "Off Leash"))),
-                box(title = "Dog Run",
-                    radioButtons("run", "Dog Run", choices = "Dog Run"))),#radiobuttons is for radiobuttons
-              
-              DT::renderDT({
-                datatable(table1) %>% 
-                  formatStyle(
-                    'park_size',
-                    'accessibility',
-                    'on_leash'
-                  )
-                
-                
-              })
-              
+                  box(selectInput("Accessibility", "Accessibility:", choices = unique(dog_parks_updated$Accessibility))),
+                  box(title = "On Leash",
+                      radioButtons("onleash", "Leash Options", choices = unique(dog_parks_updated$onleash)),#radiobuttons is for radiobuttons
+                      radioButtons("run", "Dog Run", choices = unique(dog_parks_updated$run))),
+                 DT::renderDT({
+                    datatable(table1) %>% 
+                      formatStyle(
+                        'park_size',
+                        'accessibility',
+                        'on_leash'
+                      )
+                    
+                    
+                  })
+                  
+                )
+              )
       )
     )
-  ))
-
+  )
+)
 
 # Define server logic required to draw a histogram
-server <- function(input, output, session) {
-  
-  output$mymap <- renderLeaflet({
-    leaflet() %>%  
+server <- function(input, output) {
+
+    output$mymap <- renderLeaflet({
+      dog_onleash<-dog_parks_updated$onleash %>% 
+        filter(onleash == "y")
+    leaflet(dog_onleash) %>%  
       addProviderTiles("OpenStreetMap")%>% 
       #addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
       #         attribution = 'Google') %>% 
@@ -65,11 +74,29 @@ server <- function(input, output, session) {
                         popup = as.character(dog_parks_updated$park_name))
 })
   
-  output$table1 = renderDT(
+    df<- dog_parks_updated
+    df_subset<- reactive({
+      a<- subset(df, size_acre == input$park_size, onleash == input$onleash, run == input$run)
+      return(a)
+      
+    })
+    
+    output$table1 = renderDT(
     dog_parks_updated
   )
 }
 
 
+
 # Run the application 
 shinyApp(ui = ui, server = server)
+  
+ 
+  # output$table1 <- DT::renderDataTable({
+  #   DT::datatable(df_subset)
+  # })
+
+
+
+
+
