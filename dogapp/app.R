@@ -87,7 +87,8 @@ server <- function(input, output) {
   output$table1 = renderDT(
     sub_table<-dog_parks_updated %>%
       filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) %>% 
-      rename
+      select("park_name", "size_acre", "address") %>% 
+      rename( "Park Name" = "park_name", "Park Size (Acre)" = "size_acre", " Park Address" = "address")
   )
  }
 
