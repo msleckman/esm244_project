@@ -70,11 +70,14 @@ server <- function(input, output) {
       addProviderTiles("OpenStreetMap")%>% 
       #addTiles(urlTemplate = "https://mts1.google.com/vt/lyrs=s&hl=en&src=app&x={x}&y={y}&z={z}&s=G",
       #         attribution = 'Google') %>% 
-      #setView(lng = -119.8, lat = 34.4, zoom = 11) %>% 
-      addMarkers(lat = sub_map$`latitude-decimal`, 
-                 lng = sub_map$`longitude-decimal`,
+      setView(lng = -119.8, lat = 34.4, zoom = 11) %>%  
+      addMarkers(lat = sub_map$`latitude-decimal`,
+                 lng = sub_map$`longitude-decimal`, 
+                 popup = as.character(sub_map$park_name))
+    
+        ##popupOptions(sub_map$park_name)
                  #clusterOptions = markerClusterOptions(),
-                 popup = as.character(dog_parks_updated$park_name))
+      #could remove this.
   })
   
   # df<- dog_parks_updated
@@ -86,10 +89,11 @@ server <- function(input, output) {
   # 
   output$table1 = renderDT(
     sub_table<-dog_parks_updated %>%
-      filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) %>% 
-      rename
+      filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) 
   )
- }
+ 
+  
+}
 
 
 
