@@ -7,8 +7,7 @@ library(leaflet)
 library(dplyr)
 library(shinyjs)
 
-
-
+#View(dog_parks_updated)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPage(skin = "green",
@@ -19,9 +18,6 @@ ui <- dashboardPage(skin = "green",
                       sidebarMenu(
                         menuItem("Park Selection", tabName = "tab_1", icon = icon("map-marker")),
                         menuItem("Data Information", tabName = "tab_top", icon = icon("question-circle"))
-                        
-                        
-                        
                       )
                     ),
                     
@@ -31,10 +27,10 @@ ui <- dashboardPage(skin = "green",
                         tabItem(tabName = "tab_1",
                                 fluidPage(
                                   fluidRow(
-                                    useShinyjs(),
-                                    div(
-                                      id="form",
-                                      box(sliderInput("park_size", "Park Size (Acres):", 0,135, 30),
+                                    radioButtons("all_parks", "Search Method", choices = c("All", "Filtered"),
+                                                 selected="All",
+                                                 inline=TRUE),
+                                      box(sliderInput("park_size", "Park Size Range (Acres):", min=0,max=135, ste=30, value=135),
                                           selectInput("Accessibility", "Accessibility:", c("Unpaved" = "u", "Paved" = "p", "Nonaccessible" = "n"))),
                                       # choices = unique(dog_parks_updated$Accessibility)), label=,
                                       #box(checkboxGroupInput("onleash", "Leash Rules:",
@@ -44,19 +40,17 @@ ui <- dashboardPage(skin = "green",
                                       # checkboxGroupInput("run", "Dog Run?",
                                       #choices = list("Dog Run?" = "y"),
                                       #selected = "n")),
-                                      
-                                      
-                                      box(radioButtons("onleash", "Leash Rules", c("On Leash" = "y", "Off Leash" = "n")),
-                                          #radiobuttons is for radiobuttons
-                                          radioButtons("run", "Dog Run?", c("Dog Run" = "y", "No Dog Run" = "n")),
-                                          actionButton("resetAll", "Reset all")
-                                      )),
                                     
+                                      box(radioButtons("onleash", "Leash Rules", c("onleash"="y", "offleash"="n")),
+                                          #radioButtons("onleash", "I don't care", choices = unique(dog_parks_updated$onleash)),
+                                          #radiobuttons is for radiobuttons
+                                          radioButtons("run", "Dog Run?", c("Dog Run" = "y", "No Dog Run" = "n"))
+                                          #actionButton("resetAll", "Reset all")
+                                      )
+                                      ),
                                     
                                     ##Map input at top of page
                                     leafletOutput("mymap"),
-                                    #actionButton("park"),
-                                    #verbatimTextOutput('summary')),
                                     
                                     ##Table input below map                  
                                     DTOutput('table1'),
@@ -71,8 +65,6 @@ ui <- dashboardPage(skin = "green",
                                           'onleash',
                                           'run'
                                           
-                                          
-                                          
                                         )
                                       
                                       
@@ -81,6 +73,7 @@ ui <- dashboardPage(skin = "green",
                                   )
                                 )
                         ),
+                      
                         tabItem(tabName = "tab_top",
                                 fluidPage(
                                   fluidRow(
@@ -88,6 +81,7 @@ ui <- dashboardPage(skin = "green",
                                          width = 10,
                                          "This application was created to provide information for dog owners. Isla Vista has recently experienced several negative dog intereactions, causing many community members to worry about off leash dogs. This app is intended to be used by dog owners to find parks that best suit their needs - accessibility, with or without dog runs, and on or off leash areas. The parks in this application do not represent all parks in Goleta and Isla Vista, but rather show those most popular with dog owners."
                                     ),
+                                    
                                     box( title = "About the Data",
                                          width = 10,
                                          "Data was collected by Lauren Krohmer and Margaux Sleckman. Collection techniques include literature review, field observations, and prior knowledge of the parks in Goleta and Isla Vista. "
@@ -98,30 +92,42 @@ ui <- dashboardPage(skin = "green",
                                     ), HTML('<p><img src="dogs.png"/></p>'), align = "left")
                                   
                                   
-                                  
+                        
                                   #textInput("intro", h2("About This Data"),
                                   #textInput("parkinfo",  h1("This study was conducted to provide information for dog owners. Isla Vista has recently experienced several negative dog intereactions, causing many community members to worry about off leash dogs. This app is intended to be used by dog owners to find parks that best suit their needs - accessibility, with or without dog runs, and on or off leash areas.")),
                                   #verbatimTextOutput("parkinfo"))
                                 )
                         )
-                      )))
+                      )
+                    )
+                    
 
 
 # Define server logic required to draw a histogram
-server <- function(input, output, session) {
-  
-  observeEvent(input$resetAll, {
-    updateSliderInput(session, "park_size",value=135)
-    #updateRadioButtons(session, "onleash", value="on leash")
-    #updateCheckboxGroupInput(session, "onleash", value="on leash")
-    
-  })
-  
-  
+server <- function(input, output) {
+
+#   observeEvent(input$resetAll)({
+#    updateSliderInput(session, "park_size",value=135)
+#     #updateRadioButtons(session, "onleash", value="on leash")
+#     #updateCheckboxGroupInput(session, "onleash", value="on leash")
+# })
+#   
   output$mymap <- renderLeaflet({
     
-    sub_map<-dog_parks_updated %>% 
-      filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) 
+    if (input$all_parks == "All"){
+      sub_map<-dog_parks_updated}
+     else{sub_map<-dog_parks_updated %>% 
+       filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size)
+     }
+    
+    #   sub_map <- dog_parks_updated %>% 
+    #     filter(onleash)
+    # } else {
+    #   sub_map <- dog_parks_updated %>%
+    #     filter(input$onleash)
+    # }
+    
+      #filter(onleash== input$onleash, run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size)
     
     leaflet(sub_map)%>%
       addProviderTiles("OpenStreetMap")%>% 
@@ -133,7 +139,7 @@ server <- function(input, output, session) {
                  #clusterOptions = markerClusterOptions(),
                  popup = as.character(sub_map$park_name))
   })
-  
+
   # df<- dog_parks_updated
   # df_subset<- reactive({
   #   a<- subset(df, size_acre == input$park_size, onleash == input$onleash, run == input$run)
@@ -143,26 +149,26 @@ server <- function(input, output, session) {
   # 
   
   output$table1 = renderDT(
-    sub_table<-dog_parks_updated %>%
-      filter(onleash == input$onleash & run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) %>% 
+    if (input$all_parks == "All"){
+      sub_table<-dog_parks_updated}
+    else{sub_table<-dog_parks_updated %>% 
+      filter(run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) %>% 
       select("park_name", "size_acre", "address") %>% 
-      rename( "Park Name" = "park_name", "Park Size (Acre)" = "size_acre", " Park Address" = "address"))
-  
-  
-  
+      rename( "Park Name" = "park_name", "Park Size (Acre)" = "size_acre", " Park Address" = "address")
+    })
+
+     # sub_table<-dog_parks_updated %>%
+     #  #filter(onleash == input$onleash
+     #  filter(run == input$run & Accessibility == input$Accessibility & size_acre <= input$park_size) %>% 
+     #  select("park_name", "size_acre", "address") %>% 
+     #  rename( "Park Name" = "park_name", "Park Size (Acre)" = "size_acre", " Park Address" = "address"))
+
+
 }
-
-
-
-
-
-
-
 
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
 
 # output$table1 <- DT::renderDataTable({
 #   DT::datatable(df_subset)
